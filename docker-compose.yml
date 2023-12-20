@@ -1,7 +1,7 @@
 version: '3'
 services:
   weblate:
-    image: weblate/weblate
+    build: .
     tmpfs:
     - /run
     - /tmp
@@ -10,6 +10,8 @@ services:
     - weblate-cache:/app/cache
     env_file:
     - ./environment
+    ports:
+    - 80:8080
     restart: always
     read_only: true
     depends_on:
