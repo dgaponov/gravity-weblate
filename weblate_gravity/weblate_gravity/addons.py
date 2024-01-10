@@ -22,7 +22,7 @@ class GravityAddon(BaseAddon):
 
     def component_update(self, component):
         applied_addons_changes = component.change_set.filter(
-            action__in=[Change.ACTION_ADDON_CREATE, Change.ACTION_UPDATE]
+            action=Change.ACTION_ADDON_CREATE
         ).order_by("-id")
 
         if not applied_addons_changes.exists():
