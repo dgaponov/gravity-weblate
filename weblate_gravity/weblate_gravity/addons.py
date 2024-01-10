@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from django.db.models import Q
 from django.utils import timezone
 
 from weblate.addons.base import BaseAddon
@@ -25,12 +26,15 @@ class GravityAddon(BaseAddon):
             action=Change.ACTION_ADDON_CREATE
         ).order_by("-id")
 
-        if not applied_addons_changes.exists():
-            print('Not found addons applying. Exit')
-            return
+        analyze_from_id = None
+        analyze_from_date = timezone.now().date() - timedelta(minutes=10)
+        changes_filter = Q(timestamp__date__gte=analyze_from_date)
 
-        analyze_from_id = applied_addons_changes[0].id
-        analyze_from_date = timezone.now().date() - timedelta(minutes=5)
+        if applied_addons_changes.exists():
+            analyze_from_id = applied_addons_changes[0].id
+            changes_filter = changes_filter & Q(id__gt=analyze_from_id)
+        else:
+            print("Not found addons applying. Maybe this is new component.")
 
         for translation in component.translation_set.iterator():
             units = translation.unit_set.filter(
@@ -39,10 +43,7 @@ class GravityAddon(BaseAddon):
             )
 
             for unit in units:
-                changes = unit.change_set.filter(
-                    timestamp__date__gte=analyze_from_date,
-                    id__gt=analyze_from_id
-                ).order_by("-id")
+                changes = unit.change_set.filter(changes_filter).order_by("-id")
 
                 last_change_from_repo = changes.exists() and changes[0].action == Change.ACTION_STRING_REPO_UPDATE
 
