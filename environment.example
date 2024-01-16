@@ -14,10 +14,19 @@ WEBLATE_ALLOWED_HOSTS=*
 WEBLATE_REGISTRATION_OPEN=1
 WEBLATE_SITE_DOMAIN=weblate.example.com
 WEBLATE_ADD_ADDONS=weblate_gravity.addons.GravityAddon
+WEBLATE_WORKERS=4
+WEB_WORKERS=16
 
 WEBLATE_GITHUB_USERNAME=WeblateGravity
 WEBLATE_GITHUB_TOKEN=ghp_REPLACE
 WEBLATE_GITHUB_HOST=api.github.com
+
+# Mail server, the server has to listen on port 587 and understand TLS
+WEBLATE_EMAIL_HOST=127.0.0.1
+# Do NOT use quotes here
+WEBLATE_EMAIL_HOST_USER=
+# Do NOT use quotes here
+WEBLATE_EMAIL_HOST_PASSWORD=
 
 # Extra
 #WEBLATE_TIME_ZONE=
@@ -56,13 +65,6 @@ POSTGRES_PORT=
 # https://docs.weblate.org/en/latest/admin/install.html#production-cache
 REDIS_HOST=cache
 REDIS_PORT=6379
-
-# Mail server, the server has to listen on port 587 and understand TLS
-WEBLATE_EMAIL_HOST=127.0.0.1
-# Do NOT use quotes here
-WEBLATE_EMAIL_HOST_USER=
-# Do NOT use quotes here
-WEBLATE_EMAIL_HOST_PASSWORD=
 
 # GitLab lab setup
 # WEBLATE_GITLAB_USERNAME=
