@@ -20,6 +20,7 @@ class GravityAddon(BaseAddon):
     )
     user_name = "gravity"
     user_verbose = "Gravity addon"
+    trigger_update = True
 
     def component_update(self, component):
         applied_addons_changes = component.change_set.filter(
