@@ -77,17 +77,18 @@ class GravityAddon(BaseAddon):
             units = translation.unit_set.filter(last_updated__date__gte=analyze_from_date)
 
             for unit in units:
-                if unit.state >= STATE_TRANSLATED:
+                value_in_master = approved_translations_in_master.get(
+                    translation.language_code,
+                    {}
+                ).get(unit.checksum, None)
+
+                is_equal_to_master = unit.get_target_plurals() == value_in_master
+
+                if is_equal_to_master and unit.state < STATE_TRANSLATED:
+                    unit.translate(self.user, unit.target, STATE_TRANSLATED, propagate=False)
+                elif unit.state >= STATE_TRANSLATED:
                     changes = unit.change_set.filter(changes_filter).order_by("-id")
                     last_change_from_repo = changes.exists() and changes[0].action == Change.ACTION_STRING_REPO_UPDATE
 
                     if last_change_from_repo:
                         unit.translate(self.user, unit.target, STATE_FUZZY, propagate=False)
-                else:
-                    value_in_master = approved_translations_in_master.get(
-                        translation.language_code,
-                        {}
-                    ).get(unit.checksum, None)
-
-                    if unit.target.get_target_plurals() == value_in_master:
-                        unit.translate(self.user, unit.target, STATE_TRANSLATED, propagate=False)
