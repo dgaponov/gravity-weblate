@@ -39,8 +39,19 @@ def get_component_translations_in_master(component):
     return component_translations_in_master
 
 
+def fix_newline(filename):
+    """Add missed EOL to file."""
+
+    with open(filename, 'r+') as f:
+        f.seek(0, 2)
+        f.seek(f.tell() - 1, 0)
+        last_char = f.read(1)
+        if last_char != '\n':
+            f.write('\n')
+
+
 class GravityAddon(BaseAddon):
-    events = (AddonEvent.EVENT_COMPONENT_UPDATE,)
+    events = (AddonEvent.EVENT_COMPONENT_UPDATE, AddonEvent.EVENT_PRE_COMMIT,)
     name = "weblate.gravity.custom"
     verbose = 'Flag changed source or target strings as "Needs editing"'
     description = (
@@ -93,3 +104,6 @@ class GravityAddon(BaseAddon):
 
                     if last_change_from_repo:
                         unit.translate(self.user, unit.target, STATE_FUZZY, propagate=False)
+
+    def pre_commit(self, translation, author):
+        fix_newline(translation.get_filename())
