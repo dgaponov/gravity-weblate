@@ -84,7 +84,16 @@ class GravityAddon(BaseAddon):
 
         approved_translations_in_master = get_component_translations_in_master(component)
 
-        for translation in component.translation_set.iterator():
+        # The main language should be processed first
+        # This is necessary because when processing keys from secondary languages, their status in the main language is checked
+        # Accordingly, the key processing of the main language should be carried out first
+        translations = sorted(
+            component.translation_set.all(),
+            key=lambda x: x.is_source,
+            reverse=True
+        )
+
+        for translation in translations:
             units = translation.unit_set.filter(last_updated__date__gte=analyze_from_date)
 
             for unit in units:
@@ -97,10 +106,24 @@ class GravityAddon(BaseAddon):
 
                 if is_equal_to_master:
                     if unit.state < STATE_TRANSLATED:
-                        unit.translate(self.user, unit.target, STATE_TRANSLATED, propagate=False)
+                        # Confirm the translation in the main language
+                        if translation.is_source:
+                            unit.translate(self.user, unit.target, STATE_TRANSLATED, propagate=False)
+                        # In a secondary language, we confirm the translation only if it is confirmed in the primary language
+                        elif unit.source_unit.state >= STATE_TRANSLATED:
+                            unit.translate(self.user, unit.target, STATE_TRANSLATED, propagate=False)
+                    else:
+                        # In the secondary language, we remove the confirmation from the translation if it is not confirmed in the main language
+                        if not translation.is_source and unit.source_unit.state < STATE_TRANSLATED:
+                            unit.translate(self.user, unit.target, STATE_FUZZY, propagate=False)
+
                 elif unit.state >= STATE_TRANSLATED:
+                    # TODO check only content change
                     changes = unit.change_set.filter(changes_filter).order_by("-id")
-                    last_change_from_repo = changes.exists() and changes[0].action == Change.ACTION_STRING_REPO_UPDATE
+                    last_change_from_repo = changes.exists() and changes[0].action in [
+                        Change.ACTION_STRING_REPO_UPDATE,
+                        Change.ACTION_NEW_UNIT_REPO
+                    ]
 
                     if last_change_from_repo:
                         unit.translate(self.user, unit.target, STATE_FUZZY, propagate=False)
