@@ -128,5 +128,9 @@ class GravityAddon(BaseAddon):
                     if last_change_from_repo:
                         unit.translate(self.user, unit.target, STATE_FUZZY, propagate=False)
 
+        count_pending = component.count_pending_units
+        if count_pending:
+            component.commit_pending("add-on", None)
+
     def pre_commit(self, translation, author):
         fix_newline(translation.get_filename())
